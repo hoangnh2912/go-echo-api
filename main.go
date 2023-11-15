@@ -8,6 +8,7 @@ import (
 	"go-echo-api/controllers"
 	"go-echo-api/db"
 	"go-echo-api/services"
+	"go-echo-api/utils"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -70,6 +71,7 @@ func main() {
 	e.GET("/docs/*", echoSwagger.WrapHandler)
 
 	v1 := e.Group("/api")
+	utils.GetClient()
 
 	d := db.New()
 	db.AutoMigrate(d)

@@ -1,9 +1,10 @@
 package services
 
 import (
+	"errors"
 	"go-echo-api/model"
 
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type UserService struct {
@@ -19,7 +20,7 @@ func NewUserService(db *gorm.DB) *UserService {
 func (us *UserService) GetByID(id uint) (*model.User, error) {
 	var m model.User
 	if err := us.db.First(&m, id).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
@@ -30,7 +31,7 @@ func (us *UserService) GetByID(id uint) (*model.User, error) {
 func (us *UserService) GetByEmail(e string) (*model.User, error) {
 	var m model.User
 	if err := us.db.Where(&model.User{Email: e}).First(&m).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
@@ -41,7 +42,7 @@ func (us *UserService) GetByEmail(e string) (*model.User, error) {
 func (us *UserService) GetByUsername(username string) (*model.User, error) {
 	var m model.User
 	if err := us.db.Where(&model.User{Username: username}).Preload("Followers").First(&m).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
 		return nil, err
@@ -54,11 +55,11 @@ func (us *UserService) Create(u *model.User) (err error) {
 }
 
 func (us *UserService) Update(u *model.User) error {
-	return us.db.Model(u).Update(u).Error
+	return us.db.Model(u).Updates(u).Error
 }
 
 func (us *UserService) AddFollower(u *model.User, followerID uint) error {
-	return us.db.Model(u).Association("Followers").Append(&model.Follow{FollowerID: followerID, FollowingID: u.ID}).Error
+	return us.db.Model(u).Association("Followers").Append(&model.Follow{FollowerID: followerID, FollowingID: u.ID})
 }
 
 func (us *UserService) RemoveFollower(u *model.User, followerID uint) error {
@@ -66,7 +67,7 @@ func (us *UserService) RemoveFollower(u *model.User, followerID uint) error {
 		FollowerID:  followerID,
 		FollowingID: u.ID,
 	}
-	if err := us.db.Model(u).Association("Followers").Find(&f).Error; err != nil {
+	if err := us.db.Model(u).Association("Followers").Find(&f); err != nil {
 		return err
 	}
 	if err := us.db.Delete(f).Error; err != nil {
@@ -78,7 +79,7 @@ func (us *UserService) RemoveFollower(u *model.User, followerID uint) error {
 func (us *UserService) IsFollower(userID, followerID uint) (bool, error) {
 	var f model.Follow
 	if err := us.db.Where("following_id = ? AND follower_id = ?", userID, followerID).Find(&f).Error; err != nil {
-		if gorm.IsRecordNotFoundError(err) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, nil
 		}
 		return false, err

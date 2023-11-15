@@ -101,7 +101,7 @@ func (ac *ArticleController) GetArticle(c echo.Context) error {
 func (ac *ArticleController) Articles(c echo.Context) error {
 	var (
 		articles []model.Article
-		count    int
+		count    int64
 	)
 
 	tag := c.QueryParam("tag")
@@ -160,7 +160,7 @@ func (ac *ArticleController) Articles(c echo.Context) error {
 func (ac *ArticleController) Feed(c echo.Context) error {
 	var (
 		articles []model.Article
-		count    int
+		count    int64
 	)
 
 	offset, err := strconv.Atoi(c.QueryParam("offset"))

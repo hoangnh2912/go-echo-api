@@ -6,38 +6,48 @@ import (
 
 	"go-echo-api/model"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
-
-const dialect = "postgres"
 
 func GetPSQLInfo() string {
 	return fmt.Sprintf("host=%s port=%d user=%s "+" password=%s dbname=%s sslmode=disable", os.Getenv("DB_HOST"), 5432, os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
 }
 
 func New() *gorm.DB {
-	db, err := gorm.Open(dialect, GetPSQLInfo())
+	fmt.Println(GetPSQLInfo())
+	postgres.Open(GetPSQLInfo())
+	db, err := gorm.Open(postgres.Open(GetPSQLInfo()))
 	if err != nil {
 		fmt.Println("storage err: ", err)
 	}
-	db.DB().SetMaxIdleConns(3)
-	db.LogMode(true)
+	// db.DB().SetMaxIdleConns(3)
+	dbConfig, err := db.DB()
+	if err != nil {
+		fmt.Println("storage err: ", err)
+	}
+	dbConfig.SetMaxIdleConns(3)
+	db.Logger.LogMode(logger.Info)
 	return db
 }
 
 func TestDB() *gorm.DB {
-	db, err := gorm.Open(dialect, GetPSQLInfo())
+	db, err := gorm.Open(postgres.Open(GetPSQLInfo()))
 	if err != nil {
 		fmt.Println("storage err: ", err)
 	}
-	db.DB().SetMaxIdleConns(3)
-	db.LogMode(false)
+	dbConfig, err := db.DB()
+	if err != nil {
+		fmt.Println("storage err: ", err)
+	}
+	dbConfig.SetMaxIdleConns(3)
+	db.Logger.LogMode(logger.Info)
 	return db
 }
 
 func DropTestDB() error {
-	db, err := gorm.Open(dialect, GetPSQLInfo())
+	db, err := gorm.Open(postgres.Open(GetPSQLInfo()))
 	if err != nil {
 		fmt.Println("storage err: ", err)
 	}
@@ -46,7 +56,6 @@ func DropTestDB() error {
 
 }
 
-// TODO: err check
 func AutoMigrate(db *gorm.DB) {
 	fmt.Println("Starting Auto Migration")
 

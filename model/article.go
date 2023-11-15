@@ -1,8 +1,6 @@
 package model
 
-import (
-	"github.com/jinzhu/gorm"
-)
+import "gorm.io/gorm"
 
 type Article struct {
 	gorm.Model
